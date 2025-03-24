@@ -1,0 +1,33 @@
+name: List APIs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  list-apis:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Get access token
+      id: get-token
+      run: |
+        response=$(curl -X POST https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
+          -d "client_id=${{ secrets.CLIENT_ID }}" \
+          -d "client_secret=${{ secrets.CLIENT_SECRET }}" \
+          -d "grant_type=client_credentials")
+        echo "::set-output name=token::$(echo $response | jq -r .access_token)"
+
+    - name: Fetch APIs
+      id: fetch-apis
+      run: |
+        token=${{ steps.get-token.outputs.token }}
+        response=$(curl -X GET https://anypoint.mulesoft.com/apimanager/api/v1/organizations/${{ secrets.ORG_ID }}/environments/${{ secrets.ENV_ID }}/apis \
+          -H "Authorization: Bearer $token")
+        echo "::set-output name=apis::$(echo $response | jq -r .apis)"
+
+    - name: Print APIs
+      run: |
+        echo "APIs: ${{ steps.fetch-apis.outputs.apis }}"
