@@ -19,14 +19,17 @@ jobs:
           -d "client_secret=${{ secrets.CLIENT_SECRET }}" \
           -d "grant_type=client_credentials")
         echo "Response: $response"
+        echo $response | jq .
         echo "token=$(echo $response | jq -r .access_token)" >> $GITHUB_ENV
 
     - name: Fetch APIs
       id: fetch-apis
       run: |
+        token=${{ env.token }}
         response=$(curl -X GET https://anypoint.mulesoft.com/apimanager/api/v1/organizations/${{ secrets.ORG_ID }}/environments/${{ secrets.ENV_ID }}/apis \
           -H "Authorization: Bearer $token")
         echo "API Response: $response"
+        echo $response | jq .
         echo "apis=$(echo $response | jq -r .apis)" >> $GITHUB_ENV
 
     - name: Print APIs
